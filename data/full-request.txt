@@ -1,0 +1,11 @@
+GET http://www.example.com HTTP/1.1
+Date: 2025-08-01T00:00:00Z
+Pragma: no-cache
+User-Agent: example-file
+From: rick's PC
+Authorization: Bearer footoken
+Content-Type: application/json
+Content-Encoding: UTF-8
+Content-Length: 17
+
+{"hello":"world"}
