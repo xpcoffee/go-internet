@@ -6,12 +6,6 @@ type Request struct {
 	MessageBody []byte
 }
 
-type RequestLine struct {
-	Method     HttpMethod
-	RequestURI URI
-	Version    HttpVersion
-}
-
 type URI string
 
 type HttpMethod string
@@ -44,9 +38,4 @@ func (m HttpVersion) IsValid() bool {
 		return true
 	}
 	return false
-}
-
-type Header struct {
-	Name    string
-	Content string
 }

@@ -5,6 +5,12 @@ import (
 	"strings"
 )
 
+type RequestLine struct {
+	Method     HttpMethod
+	RequestURI URI
+	Version    HttpVersion
+}
+
 func ParseRequestLine(input string) (RequestLine, error) {
 	requestLine := RequestLine{}
 
