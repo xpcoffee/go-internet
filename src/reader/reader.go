@@ -3,45 +3,122 @@ package reader
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
 )
 
-func ReadLinesFromReader(reader io.ReadCloser) <-chan string {
+type BufferedReader struct {
+	Reader io.ReadCloser
+	// When reading, we may "over-read" past a symbol we care about like a newline.
+	// The buffer allows us to hold onto those bytes for the next operation.
+	Buffer []byte
+}
+
+func NewBufferedReader(reader io.ReadCloser) *BufferedReader {
+	return &BufferedReader{
+		Reader: reader,
+	}
+}
+
+func (br *BufferedReader) ReadAllLines() <-chan string {
 	out := make(chan string, 1)
 
 	go func() {
+		defer br.Reader.Close()
 		defer close(out)
-		defer reader.Close()
 
-		line := ""
 		for {
-			data := make([]byte, 8)
-			n, err := reader.Read(data)
-			if errors.Is(err, io.EOF) {
-				if len(line) > 0 {
-					out <- line
-				}
-				break
-			}
-
-			eol := bytes.IndexByte(data[:n], '\n')
-			if eol != -1 {
-				line += string(data[:eol])
-				out <- line
-				line = string(data[eol+1 : n])
-			} else {
-				line += string(data[:n])
-			}
-
-			if errors.Is(err, io.ErrUnexpectedEOF) {
-				if len(line) > 0 {
-					out <- line
-				}
+			line, has_more := br.ReadLine()
+			out <- line
+			if !has_more {
 				break
 			}
 		}
-
 	}()
 
 	return out
+}
+
+// Reads up to the next newline character
+// Buffers any extra-read characters
+func (br *BufferedReader) ReadLine() (string, bool) {
+	line := ""
+
+	if br.Buffer != nil {
+		eol := bytes.IndexByte(br.Buffer, '\n')
+
+		if eol != -1 {
+			line += string(br.Buffer[:eol])
+			br.Buffer = br.Buffer[eol+1:]
+			return line, true
+		}
+
+		line += string(br.Buffer)
+	}
+
+	for {
+		data := make([]byte, 8)
+		n, err := br.Reader.Read(data)
+		has_more := n == len(data)
+
+		if errors.Is(err, io.EOF) {
+			br.Buffer = nil
+			return line, false
+		}
+
+		eol := bytes.IndexByte(data[:n], '\n')
+		if eol != -1 {
+			line += string(data[:eol])
+			br.Buffer = data[eol+1 : n]
+		} else {
+			line += string(data[:n])
+			br.Buffer = nil
+		}
+
+		if errors.Is(err, io.ErrUnexpectedEOF) {
+			has_more = false
+		}
+		return line, has_more
+	}
+}
+
+func (br *BufferedReader) ReadAllAsByte() <-chan []byte {
+	out := make(chan []byte, 1)
+
+	go func() {
+		defer br.Reader.Close()
+		defer close(out)
+		for {
+			chunk, has_more := br.ReadChunk()
+			out <- chunk
+			if !has_more {
+				break
+			}
+		}
+	}()
+
+	return out
+}
+
+// Reads the next chunk of data
+// Appends it to the buffer and clears the buffer, if any
+func (br *BufferedReader) ReadChunk() ([]byte, bool) {
+	data := make([]byte, 8)
+	n, err := br.Reader.Read(data)
+	has_more := n == len(data)
+	data = data[:n]
+
+	if br.Buffer != nil {
+		data = append(br.Buffer, data...)
+		br.Buffer = nil
+	}
+
+	if errors.Is(err, io.EOF) {
+		has_more = false
+	}
+
+	if err != nil {
+		fmt.Printf("return %t %s\n", has_more, err.Error())
+	}
+	return data, has_more
 }

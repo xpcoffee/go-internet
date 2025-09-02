@@ -18,7 +18,7 @@ func main() {
 			panic(err)
 		}
 
-		for line := range reader.ReadLinesFromReader(conn) {
+		for line := range reader.NewBufferedReader(conn).ReadAllLines() {
 			fmt.Println(line)
 		}
 	}
