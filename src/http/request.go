@@ -1,8 +1,11 @@
 package http
 
 import (
+	"errors"
 	"fmt"
 	"internet-protocols/reader"
+	"io"
+	"strconv"
 )
 
 type Request struct {
@@ -17,9 +20,7 @@ func ParseRequest(br *reader.BufferedReader) (Request, error) {
 	request := Request{}
 
 	requestLineStr, has_more := br.ReadLine()
-	fmt.Printf("hasmor %t - %s\n", has_more, requestLineStr)
 	requestLine, err := ParseRequestLine(requestLineStr)
-	fmt.Printf("Requestline %s\n", requestLine)
 	request.RequestLine = requestLine
 	if err != nil {
 		return request, err
@@ -28,10 +29,12 @@ func ParseRequest(br *reader.BufferedReader) (Request, error) {
 		return request, fmt.Errorf("Incomplete request")
 	}
 
+	body_bytes := 0
+
 	request.Headers = make([]Header, 0)
 	for {
-		headerStr, hase_more := br.ReadLine()
-		if headerStr == "" {
+		headerStr, has_more := br.ReadLine()
+		if headerStr == "" || !has_more {
 			break
 		}
 
@@ -41,17 +44,31 @@ func ParseRequest(br *reader.BufferedReader) (Request, error) {
 			return request, error
 		}
 
-		if !hase_more {
-			return request, fmt.Errorf("Expected empty CRLF after headers")
+		if header.Name == ContentLength {
+			body_bytes, err = strconv.Atoi(header.Content)
+			if err != nil {
+				return request, fmt.Errorf("Content-Length value could not be extracted")
+			}
 		}
 	}
 
-	body := make([]byte, 0)
-	out := br.ReadAllAsByte()
-	for chunk := range out {
-		body = append(body, chunk...)
-	}
-	if len(body) > 0 {
+	if body_bytes > 0 {
+		body := make([]byte, body_bytes)
+		n, err := br.Reader.Read(body)
+		if err != nil {
+			return request, fmt.Errorf("Could not parse body")
+		}
+
+		overflow := make([]byte, 1)
+		m, err := br.Reader.Read(overflow)
+		if errors.Is(err, io.EOF) {
+			return request, fmt.Errorf("Could not parse body")
+		}
+
+		if n != body_bytes || m > 0 {
+			return request, fmt.Errorf("Body content is not the size of Content-Length")
+		}
+
 		request.MessageBody = string(body)
 	}
 

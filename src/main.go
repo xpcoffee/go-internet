@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"internet-protocols/http"
 	"internet-protocols/reader"
 	"net"
 )
@@ -18,8 +19,15 @@ func main() {
 			panic(err)
 		}
 
-		for line := range reader.NewBufferedReader(conn).ReadAllLines() {
-			fmt.Println(line)
+		request, err := http.ParseRequest(reader.NewBufferedReader(conn))
+		if err != nil {
+			fmt.Println(err.Error())
+		} else {
+			fmt.Println(request)
 		}
+
+		var response = []byte("HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n\r\nHello World!")
+		conn.Write(response)
+		conn.Close()
 	}
 }

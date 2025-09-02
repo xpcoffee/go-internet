@@ -21,15 +21,17 @@ const (
 	Date            HeaderName = "Date"
 	UserAgent       HeaderName = "UserAgent"
 	ContentEncoding HeaderName = "Content-Encoding"
+	Connection      HeaderName = "Connection"
 	Pragma          HeaderName = "Pragma"
 )
 
 func (header HeaderName) IsValid() bool {
-	switch header {
-	case Accept, Authorization, ContentLength, ContentType, Host, Date, UserAgent, ContentEncoding, Pragma:
-		return true
-	}
-	return false
+	// Disable for now - too many in spec
+	// switch header {
+	// case Accept, Authorization, ContentLength, ContentType, Host, Date, UserAgent, ContentEncoding, Pragma, Connection:
+	// 	return true
+	// }
+	return true
 }
 
 func ParseHeader(input string) (Header, error) {

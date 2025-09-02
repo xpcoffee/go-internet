@@ -20,7 +20,7 @@ func NewBufferedReader(reader io.ReadCloser) *BufferedReader {
 	}
 }
 
-func (br *BufferedReader) ReadAllLines() <-chan string {
+func (br *BufferedReader) ReadAllCRLF() <-chan string {
 	out := make(chan string, 1)
 
 	go func() {
@@ -28,7 +28,7 @@ func (br *BufferedReader) ReadAllLines() <-chan string {
 		defer close(out)
 
 		for {
-			line, has_more := br.ReadLine()
+			line, has_more := br.ReadCRLF()
 			out <- line
 			if !has_more {
 				break
@@ -39,50 +39,45 @@ func (br *BufferedReader) ReadAllLines() <-chan string {
 	return out
 }
 
+const DEFAULT_CHUNK_SIZE_BYTES = 8
+
 // Reads up to the next newline character
 // Buffers any extra-read characters
-func (br *BufferedReader) ReadLine() (string, bool) {
-	line := ""
-
-	if br.Buffer != nil {
-		eol := bytes.IndexByte(br.Buffer, '\n')
-
-		if eol != -1 {
-			line += string(br.Buffer[:eol])
-			br.Buffer = br.Buffer[eol+1:]
-			fmt.Println("A")
-			return line, true
-		}
-
-		line += string(br.Buffer)
-	}
+func (br *BufferedReader) ReadCRLF() (string, bool) {
+	has_more := true
 
 	for {
-		data := make([]byte, 8)
+		// first check what's in the current buffer
+		eol := bytes.IndexByte(br.Buffer, '\n')
+		crlf_found := eol > 0 && br.Buffer[eol-1] == byte('\r')
+		if crlf_found {
+			data := br.Buffer[:eol-1]
+
+			if len(br.Buffer) > eol {
+				left_over := br.Buffer[eol+1:]
+				br.Buffer = left_over
+			}
+
+			return string(data), has_more
+		}
+
+		// then read more data
+		data := make([]byte, DEFAULT_CHUNK_SIZE_BYTES)
 		n, err := br.Reader.Read(data)
+		br.Buffer = append(br.Buffer, data[:n]...)
 
-		if errors.Is(err, io.EOF) {
-			br.Buffer = nil
-			fmt.Println("B")
-			return line, false
+		if err != nil {
+			fmt.Printf("error %s\n", err.Error())
 		}
 
-		eol := bytes.IndexByte(data[:n], '\n')
-		if eol != -1 {
-			line += string(data[:eol])
-			br.Buffer = data[eol+1 : n]
-			break
-		} else {
-			line += string(data[:n])
-			br.Buffer = nil
+		if err != nil || n < len(data) {
+			has_more = false
 		}
 
-		if errors.Is(err, io.ErrUnexpectedEOF) {
-			return line, false
+		if !has_more {
+			return string(br.Buffer), has_more
 		}
 	}
-
-	return line, true
 }
 
 func (br *BufferedReader) ReadAllAsByte() <-chan []byte {
@@ -106,7 +101,7 @@ func (br *BufferedReader) ReadAllAsByte() <-chan []byte {
 // Reads the next chunk of data
 // Appends it to the buffer and clears the buffer, if any
 func (br *BufferedReader) ReadChunk() ([]byte, bool) {
-	data := make([]byte, 8)
+	data := make([]byte, DEFAULT_CHUNK_SIZE_BYTES)
 	n, err := br.Reader.Read(data)
 	has_more := n == len(data)
 	data = data[:n]
