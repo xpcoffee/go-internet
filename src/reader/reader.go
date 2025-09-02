@@ -50,6 +50,7 @@ func (br *BufferedReader) ReadLine() (string, bool) {
 		if eol != -1 {
 			line += string(br.Buffer[:eol])
 			br.Buffer = br.Buffer[eol+1:]
+			fmt.Println("A")
 			return line, true
 		}
 
@@ -59,10 +60,10 @@ func (br *BufferedReader) ReadLine() (string, bool) {
 	for {
 		data := make([]byte, 8)
 		n, err := br.Reader.Read(data)
-		has_more := n == len(data)
 
 		if errors.Is(err, io.EOF) {
 			br.Buffer = nil
+			fmt.Println("B")
 			return line, false
 		}
 
@@ -70,16 +71,18 @@ func (br *BufferedReader) ReadLine() (string, bool) {
 		if eol != -1 {
 			line += string(data[:eol])
 			br.Buffer = data[eol+1 : n]
+			break
 		} else {
 			line += string(data[:n])
 			br.Buffer = nil
 		}
 
 		if errors.Is(err, io.ErrUnexpectedEOF) {
-			has_more = false
+			return line, false
 		}
-		return line, has_more
 	}
+
+	return line, true
 }
 
 func (br *BufferedReader) ReadAllAsByte() <-chan []byte {

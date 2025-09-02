@@ -22,7 +22,7 @@ func TestReadAllAsString(t *testing.T) {
 }
 
 func TestReadLine(t *testing.T) {
-	multiline_string := "foo\nbar\nbaz"
+	multiline_string := "foo\nbarbaz\ngrault"
 	readCloser := io.NopCloser(strings.NewReader(multiline_string))
 	br := NewBufferedReader(readCloser)
 
@@ -35,11 +35,11 @@ func TestReadLine(t *testing.T) {
 
 	result, has_more = br.ReadLine()
 	assert.True(t, has_more)
-	assert.Equal(t, "bar", result)
+	assert.Equal(t, "barbaz", result)
 
 	result, has_more = br.ReadLine()
 	assert.False(t, has_more)
-	assert.Equal(t, "baz", result)
+	assert.Equal(t, "grault", result)
 
 	result, has_more = br.ReadLine()
 	assert.False(t, has_more)
