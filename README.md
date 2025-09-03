@@ -17,5 +17,3 @@ curl localhost:42069
 curl -X POST localhost:42069 -d '{"ahoy":"matey"}'
 # -> {{POST / HTTP/1.1} [{Host localhost:42069} {User-Agent curl/7.81.0} {Accept */*} {Content-Length 16} {Content-Type application/x-www-form-urlencoded}] {"ahoy":"matey"}}
 ```
-
-> BUG - looks like we hang on POST with data until we kill the request

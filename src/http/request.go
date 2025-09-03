@@ -1,10 +1,8 @@
 package http
 
 import (
-	"errors"
 	"fmt"
 	"internet-protocols/reader"
-	"io"
 	"strconv"
 )
 
@@ -61,14 +59,8 @@ func ParseRequest(br *reader.BufferedReader) (Request, error) {
 			return request, fmt.Errorf("Could not parse body: %s", err.Error())
 		}
 
-		overflow := make([]byte, 1)
-		m, err := br.Reader.Read(overflow)
-		if !errors.Is(err, io.EOF) {
-			return request, fmt.Errorf("Could not parse body")
-		}
-
-		if n != bytes_to_read || m > 0 {
-			return request, fmt.Errorf("Body content is not the size of Content-Length")
+		if n != bytes_to_read {
+			return request, fmt.Errorf("Body does not contain data the size of Content-Length")
 		}
 
 		body := append(br.Buffer, data...)
