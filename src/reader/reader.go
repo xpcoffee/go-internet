@@ -58,7 +58,13 @@ func (br *BufferedReader) ReadCRLF() (string, bool) {
 				br.Buffer = left_over
 			}
 
-			return string(data), has_more
+			return string(data), true // always true to flush buffer
+		}
+
+		if !has_more {
+			data := string(br.Buffer)
+			br.Buffer = nil
+			return data, has_more
 		}
 
 		// then read more data
@@ -66,16 +72,8 @@ func (br *BufferedReader) ReadCRLF() (string, bool) {
 		n, err := br.Reader.Read(data)
 		br.Buffer = append(br.Buffer, data[:n]...)
 
-		if err != nil {
-			fmt.Printf("error %s\n", err.Error())
-		}
-
 		if err != nil || n < len(data) {
 			has_more = false
-		}
-
-		if !has_more {
-			return string(br.Buffer), has_more
 		}
 	}
 }

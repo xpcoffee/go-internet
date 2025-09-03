@@ -7,8 +7,8 @@ import (
 	"testing"
 )
 
-func TestReadAllAsString(t *testing.T) {
-	multiline_string := "foo\nbar\nbaz"
+func TestReadAllCRLF(t *testing.T) {
+	multiline_string := "foo\r\nbar\r\nbaz"
 	readCloser := io.NopCloser(strings.NewReader(multiline_string))
 	br := NewBufferedReader(readCloser)
 	result := make([]string, 0)
@@ -21,8 +21,8 @@ func TestReadAllAsString(t *testing.T) {
 	assert.Equal(t, []string{"foo", "bar", "baz"}, result)
 }
 
-func TestReadLine(t *testing.T) {
-	multiline_string := "foo\nbarbaz\ngrault"
+func TestReadCRLF(t *testing.T) {
+	multiline_string := "foo\r\nbarbaz\r\ngrault"
 	readCloser := io.NopCloser(strings.NewReader(multiline_string))
 	br := NewBufferedReader(readCloser)
 
@@ -47,7 +47,7 @@ func TestReadLine(t *testing.T) {
 }
 
 func TestIterativeRead(t *testing.T) {
-	multiline_string := "foo\nbar\nbaz"
+	multiline_string := "foo\r\nbar\r\nbaz"
 	readCloser := io.NopCloser(strings.NewReader(multiline_string))
 	br := NewBufferedReader(readCloser)
 
@@ -66,7 +66,7 @@ func TestIterativeRead(t *testing.T) {
 }
 
 func TestReadAllAsByte(t *testing.T) {
-	multiline_string := "foo\nbar\nbaz"
+	multiline_string := "foo\rbar\r\nbaz"
 	readCloser := io.NopCloser(strings.NewReader(multiline_string))
 	br := NewBufferedReader(readCloser)
 	result := make([]string, 0)
@@ -76,5 +76,5 @@ func TestReadAllAsByte(t *testing.T) {
 		result = append(result, string(chunk))
 	}
 
-	assert.Equal(t, []string{"foo\nbar\n", "baz"}, result)
+	assert.Equal(t, []string{"foo\rbar\r", "\nbaz"}, result)
 }
