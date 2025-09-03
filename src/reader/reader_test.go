@@ -13,7 +13,7 @@ func TestReadAllAsString(t *testing.T) {
 	br := NewBufferedReader(readCloser)
 	result := make([]string, 0)
 
-	out := br.ReadAllLines()
+	out := br.ReadAllCRLF()
 	for line := range out {
 		result = append(result, line)
 	}
@@ -29,19 +29,19 @@ func TestReadLine(t *testing.T) {
 	out := make(chan string, 1)
 	defer close(out)
 
-	result, has_more := br.ReadLine()
+	result, has_more := br.ReadCRLF()
 	assert.True(t, has_more)
 	assert.Equal(t, "foo", result)
 
-	result, has_more = br.ReadLine()
+	result, has_more = br.ReadCRLF()
 	assert.True(t, has_more)
 	assert.Equal(t, "barbaz", result)
 
-	result, has_more = br.ReadLine()
+	result, has_more = br.ReadCRLF()
 	assert.False(t, has_more)
 	assert.Equal(t, "grault", result)
 
-	result, has_more = br.ReadLine()
+	result, has_more = br.ReadCRLF()
 	assert.False(t, has_more)
 	assert.Equal(t, "", result)
 }
@@ -53,12 +53,12 @@ func TestIterativeRead(t *testing.T) {
 
 	result := make([]string, 0)
 
-	line, has_more := br.ReadLine()
+	line, has_more := br.ReadCRLF()
 	result = append(result, line)
 	assert.True(t, has_more)
 	assert.Equal(t, "foo", result[0])
 
-	for line := range br.ReadAllLines() {
+	for line := range br.ReadAllCRLF() {
 		result = append(result, line)
 	}
 

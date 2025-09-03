@@ -9,11 +9,12 @@ import (
 )
 
 func TestParseRequest(t *testing.T) {
-	request_str := `GET http://www.example.com HTTP/1.1
-Host: localhost
-Content-Length: 17
-
-{"hello":"world"}`
+	request_str :=
+		"GET http://www.example.com HTTP/1.1\r\n" +
+			"Host: localhost\r\n" +
+			"Content-Length: 17\r\n" +
+			"\r\n" +
+			`{"hello":"world"}`
 
 	expected := Request{
 		RequestLine: RequestLine{

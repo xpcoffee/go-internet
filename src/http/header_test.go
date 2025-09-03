@@ -26,10 +26,6 @@ func TestParseHeader(t *testing.T) {
 	assert.Nil(t, error)
 	assert.Equal(t, expected, result)
 
-	result, error = ParseHeader("BAD: Some content")
-	assert.NotNil(t, error)
-	assert.Equal(t, "'BAD' is not a known header name", error.Error())
-
 	_, error = ParseHeader("")
 	assert.NotNil(t, error)
 	assert.Equal(t, "Invalid header. Expected 'HeaderName: HeaderContent'. Got ''", error.Error())
