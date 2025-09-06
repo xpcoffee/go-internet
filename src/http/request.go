@@ -3,12 +3,11 @@ package http
 import (
 	"fmt"
 	"internet-protocols/reader"
-	"strconv"
 )
 
 type Request struct {
 	RequestLine RequestLine
-	Headers     []Header
+	Headers     map[HeaderName]Header
 	MessageBody string
 }
 
@@ -27,9 +26,7 @@ func ParseRequest(br *reader.BufferedReader) (Request, error) {
 		return request, fmt.Errorf("Incomplete request")
 	}
 
-	body_bytes := 0
-
-	request.Headers = make([]Header, 0)
+	request.Headers = make(map[HeaderName]Header)
 	for {
 		headerStr, has_more := br.ReadCRLF()
 		if headerStr == "" || !has_more {
@@ -37,22 +34,16 @@ func ParseRequest(br *reader.BufferedReader) (Request, error) {
 		}
 
 		header, error := ParseHeader(headerStr)
-		request.Headers = append(request.Headers, header)
 		if error != nil {
 			return request, error
 		}
-
-		if header.Name == ContentLength {
-			body_bytes, err = strconv.Atoi(header.Content)
-			if err != nil {
-				return request, fmt.Errorf("Content-Length value could not be extracted")
-			}
-		}
+		request.Headers[header.Name()] = header
 	}
 
-	if body_bytes > 0 {
+	content_length, ok := request.Headers[ContentLength].(*ContentLengthHeader)
+	if ok && content_length != nil {
 		buffer_bytes := len(br.Buffer)
-		bytes_to_read := body_bytes - buffer_bytes
+		bytes_to_read := *&content_length.Value - buffer_bytes
 		data := make([]byte, bytes_to_read)
 		n, err := br.Reader.Read(data)
 		if err != nil {
