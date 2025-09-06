@@ -11,6 +11,10 @@ type Request struct {
 	MessageBody string
 }
 
+func (request Request) String() string {
+	return fmt.Sprintf("%s %+v %s", request.RequestLine, request.Headers, request.MessageBody)
+}
+
 type URI string
 
 func ParseRequest(br *reader.BufferedReader) (Request, error) {

@@ -7,25 +7,20 @@ import (
 
 type Header interface {
 	Name() HeaderName
+	String() string
 	Parse(content string) (Header, error)
 }
 
 type HeaderName string
 
-func (header HeaderName) IsValid() bool {
-	// Disable for now - too many in spec
-	// switch header {
-	// case Accept, Authorization, ContentLength, ContentType, Host, Date, UserAgent, ContentEncoding, Pragma, Connection:
-	// 	return true
-	// }
-	return true
+func (header HeaderName) String() string {
+	return string(header)
 }
 
 func ParseHeader(input string) (Header, error) {
-	header := &UnknownHeader{Value: input}
 	splitIndex := strings.Index(strings.Trim(input, " "), " ")
 	if splitIndex == -1 || input[splitIndex-1] != byte(':') {
-		return NewUnkownHeader(input), fmt.Errorf("Invalid header. Expected 'HeaderName: HeaderContent'. Got '%s'", input)
+		return NewUnkownHeader("-", "-"), fmt.Errorf("Invalid header. Expected 'HeaderName: HeaderContent'. Got '%s'", input)
 	}
 
 	name := HeaderName(input[:splitIndex-1])
@@ -35,10 +30,11 @@ func ParseHeader(input string) (Header, error) {
 		return ParseGeneralHeader(name, content)
 	}
 
-	switch name {
-	default:
-		return header, nil
+	if name.IsValidRequestHeader() {
+		return ParseRequestHeader(name, content)
 	}
+
+	return NewUnkownHeader(name, content), nil
 }
 
 type UnknownHeader struct {
@@ -51,8 +47,12 @@ func (header *UnknownHeader) Parse(content string) (Header, error) {
 	return header, nil
 }
 
-func NewUnkownHeader(headerStr string) *UnknownHeader {
-	return &UnknownHeader{Value: headerStr}
+func (header *UnknownHeader) String() string {
+	return fmt.Sprintf("%s: %s", header.HeaderName, header.Value)
+}
+
+func NewUnkownHeader(name HeaderName, content string) *UnknownHeader {
+	return &UnknownHeader{HeaderName: name, Value: content}
 }
 
 func (header *UnknownHeader) Name() HeaderName {

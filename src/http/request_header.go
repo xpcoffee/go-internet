@@ -21,10 +21,10 @@ func ParseRequestHeader(name HeaderName, content string) (Header, error) {
 
 	switch name {
 	case ContentLength:
-		return (&ContentLengthHeader{}).Parse(content)
+		return (&ContentLengthHeader{HeaderName: name}).Parse(content)
 	}
 
-	return NewUnkownHeader(string(name)), fmt.Errorf("'%s' is not yet an implemented header", name)
+	return NewUnkownHeader(name, content), fmt.Errorf("'%s' is not yet an implemented header", name)
 }
 
 type ContentLengthHeader struct {
@@ -43,4 +43,8 @@ func (header *ContentLengthHeader) Parse(content string) (Header, error) {
 
 func (header *ContentLengthHeader) Name() HeaderName {
 	return header.HeaderName
+}
+
+func (header *ContentLengthHeader) String() string {
+	return fmt.Sprintf("%s: %d", header.Name(), header.Value)
 }

@@ -15,13 +15,14 @@ func main() {
 
 	for {
 		conn, err := listener.Accept()
+		defer conn.Close()
 		if err != nil {
 			panic(err)
 		}
 
 		request, err := http.ParseRequest(reader.NewBufferedReader(conn))
 		if err != nil {
-			fmt.Println(err.Error())
+			fmt.Printf("Error: %s\n", err.Error())
 		} else {
 			fmt.Println(request)
 		}

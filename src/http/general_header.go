@@ -29,20 +29,10 @@ func ParseGeneralHeader(name HeaderName, content string) (Header, error) {
 
 	switch name {
 	case Date:
-		return (&DateHeader{}).Parse(content)
+		return (&DateHeader{HeaderName: name}).Parse(content)
 	}
 
-	return NewUnkownHeader(string(name)), fmt.Errorf("'%s' is not yet an implemented header", name)
-}
-
-type CacheControlHeader struct {
-	Name    HeaderName
-	Content string
-}
-
-type ConnectionHeader struct {
-	Name    HeaderName
-	Content string
+	return NewUnkownHeader(name, content), fmt.Errorf("'%s' is not yet an implemented header", name)
 }
 
 type DateHeader struct {
@@ -73,32 +63,6 @@ func (header *DateHeader) Name() HeaderName {
 	return header.HeaderName
 }
 
-type PragmaHeader struct {
-	Name    HeaderName
-	Content string
-}
-
-type TrailerHeader struct {
-	Name    HeaderName
-	Content string
-}
-
-type TransferEncodingHeader struct {
-	Name    HeaderName
-	Content string
-}
-
-type UpgradeHeader struct {
-	Name    HeaderName
-	Content string
-}
-
-type ViaHeader struct {
-	Name    HeaderName
-	Content string
-}
-
-type WarningHeader struct {
-	Name    HeaderName
-	Content string
+func (header *DateHeader) String() string {
+	return fmt.Sprintf("%s: %s", header.HeaderName, header.DateTime.String())
 }
