@@ -1,30 +1,20 @@
 package http
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+	"time"
+
+	"github.com/stretchr/testify/assert"
 )
 
 func TestParseHeader(t *testing.T) {
-	result, error := ParseHeader("Accept: *")
-	expected := Header{Name: Accept, Content: "*"}
+	result, error := ParseHeader("Content-Length: 8")
 	assert.Nil(t, error)
-	assert.Equal(t, expected, result)
+	assert.Equal(t, NewContentLengthHeader(8), result)
 
-	result, error = ParseHeader("Content-Length: 8")
-	expected = Header{Name: ContentLength, Content: "8"}
+	result, error = ParseHeader("Date: Tue, 29 Oct 2024 16:56:32 GMT")
 	assert.Nil(t, error)
-	assert.Equal(t, expected, result)
-
-	result, error = ParseHeader("Content-Type: application/json")
-	expected = Header{Name: ContentType, Content: "application/json"}
-	assert.Nil(t, error)
-	assert.Equal(t, expected, result)
-
-	result, error = ParseHeader("Authorization: Bearer: foobar1234")
-	expected = Header{Name: Authorization, Content: "Bearer: foobar1234"}
-	assert.Nil(t, error)
-	assert.Equal(t, expected, result)
+	assert.Equal(t, time.Date(2024, 10, 29, 16, 56, 32, 0, time.UTC), result.(*DateHeader).DateTime.UTC())
 
 	_, error = ParseHeader("")
 	assert.NotNil(t, error)

@@ -7,11 +7,12 @@ import (
 
 const (
 	ContentLength HeaderName = "Content-Length"
+	Host          HeaderName = "Host"
 )
 
 func (header HeaderName) IsValidRequestHeader() bool {
 	switch header {
-	case ContentLength:
+	case ContentLength, Host:
 		return true
 	}
 	return false
@@ -22,6 +23,8 @@ func ParseRequestHeader(name HeaderName, content string) (Header, error) {
 	switch name {
 	case ContentLength:
 		return (&ContentLengthHeader{HeaderName: name}).Parse(content)
+	case Host:
+		return (&HostHeader{HeaderName: name}).Parse(content)
 	}
 
 	return NewUnkownHeader(name, content), fmt.Errorf("'%s' is not yet an implemented header", name)
@@ -30,6 +33,13 @@ func ParseRequestHeader(name HeaderName, content string) (Header, error) {
 type ContentLengthHeader struct {
 	HeaderName HeaderName
 	Value      int
+}
+
+func NewContentLengthHeader(value int) *ContentLengthHeader {
+	return &ContentLengthHeader{
+		HeaderName: ContentLength,
+		Value:      value,
+	}
 }
 
 func (header *ContentLengthHeader) Parse(content string) (Header, error) {
@@ -47,4 +57,29 @@ func (header *ContentLengthHeader) Name() HeaderName {
 
 func (header *ContentLengthHeader) String() string {
 	return fmt.Sprintf("%s: %d", header.Name(), header.Value)
+}
+
+type HostHeader struct {
+	HeaderName HeaderName
+	Value      string
+}
+
+func NewHostHeader(value string) *HostHeader {
+	return &HostHeader{
+		HeaderName: Host,
+		Value:      value,
+	}
+}
+
+func (header *HostHeader) Parse(content string) (Header, error) {
+	header.Value = content
+	return header, nil
+}
+
+func (header *HostHeader) Name() HeaderName {
+	return header.HeaderName
+}
+
+func (header *HostHeader) String() string {
+	return fmt.Sprintf("%s: %s", header.Name(), header.Value)
 }

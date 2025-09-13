@@ -22,9 +22,9 @@ func TestParseRequest(t *testing.T) {
 			RequestURI: "http://www.example.com",
 			Version:    OneOne,
 		},
-		Headers: []Header{
-			{Name: Host, Content: "localhost"},
-			{Name: ContentLength, Content: "17"},
+		Headers: map[HeaderName]Header{
+			ContentLength: NewContentLengthHeader(17),
+			Host:          NewHostHeader("localhost"),
 		},
 		MessageBody: `{"hello":"world"}`,
 	}

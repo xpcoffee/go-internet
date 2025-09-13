@@ -40,6 +40,13 @@ type DateHeader struct {
 	DateTime   time.Time
 }
 
+func NewDateHeader(datetime time.Time) *DateHeader {
+	return &DateHeader{
+		HeaderName: Date,
+		DateTime:   datetime,
+	}
+}
+
 func (header *DateHeader) Parse(content string) (Header, error) {
 	datetime, err := time.Parse(time.RFC1123, content)
 
