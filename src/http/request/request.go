@@ -3,11 +3,15 @@ package http
 import (
 	"fmt"
 	"internet-protocols/reader"
+
+	h "internet-protocols/http/header"
+	m "internet-protocols/http/header/model"
+	r "internet-protocols/http/header/request"
 )
 
 type Request struct {
 	RequestLine RequestLine
-	Headers     map[HeaderName]Header
+	Headers     map[m.HeaderName]m.Header
 	MessageBody string
 }
 
@@ -30,21 +34,21 @@ func ParseRequest(br *reader.BufferedReader) (Request, error) {
 		return request, fmt.Errorf("Incomplete request")
 	}
 
-	request.Headers = make(map[HeaderName]Header)
+	request.Headers = make(map[m.HeaderName]m.Header)
 	for {
 		headerStr, has_more := br.ReadCRLF()
 		if headerStr == "" || !has_more {
 			break
 		}
 
-		header, error := ParseHeader(headerStr)
+		header, error := h.ParseHeader(headerStr)
 		if error != nil {
 			return request, error
 		}
 		request.Headers[header.Name()] = header
 	}
 
-	content_length, ok := request.Headers[ContentLength].(*ContentLengthHeader)
+	content_length, ok := request.Headers[r.ContentLength].(*r.ContentLengthHeader)
 	if ok && content_length != nil {
 		buffer_bytes := len(br.Buffer)
 		bytes_to_read := *&content_length.Value - buffer_bytes

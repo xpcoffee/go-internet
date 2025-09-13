@@ -2,10 +2,13 @@ package http
 
 import (
 	"github.com/stretchr/testify/assert"
-	"internet-protocols/reader"
 	"io"
 	"strings"
 	"testing"
+
+	m "internet-protocols/http/header/model"
+	r "internet-protocols/http/header/request"
+	"internet-protocols/reader"
 )
 
 func TestParseRequest(t *testing.T) {
@@ -22,9 +25,9 @@ func TestParseRequest(t *testing.T) {
 			RequestURI: "http://www.example.com",
 			Version:    OneOne,
 		},
-		Headers: map[HeaderName]Header{
-			ContentLength: NewContentLengthHeader(17),
-			Host:          NewHostHeader("localhost"),
+		Headers: map[m.HeaderName]m.Header{
+			r.ContentLength: r.NewContentLengthHeader(17),
+			r.Host:          r.NewHostHeader("localhost"),
 		},
 		MessageBody: `{"hello":"world"}`,
 	}

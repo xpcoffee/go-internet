@@ -1,8 +1,7 @@
-package http
+package model
 
 import (
 	"fmt"
-	"strings"
 )
 
 type Header interface {
@@ -15,26 +14,6 @@ type HeaderName string
 
 func (header HeaderName) String() string {
 	return string(header)
-}
-
-func ParseHeader(input string) (Header, error) {
-	splitIndex := strings.Index(strings.Trim(input, " "), " ")
-	if splitIndex == -1 || input[splitIndex-1] != byte(':') {
-		return NewUnkownHeader("-", "-"), fmt.Errorf("Invalid header. Expected 'HeaderName: HeaderContent'. Got '%s'", input)
-	}
-
-	name := HeaderName(input[:splitIndex-1])
-	content := input[splitIndex+1:]
-
-	if name.IsValidGeneralHeader() {
-		return ParseGeneralHeader(name, content)
-	}
-
-	if name.IsValidRequestHeader() {
-		return ParseRequestHeader(name, content)
-	}
-
-	return NewUnkownHeader(name, content), nil
 }
 
 type UnknownHeader struct {
